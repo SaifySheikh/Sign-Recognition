@@ -1,0 +1,68 @@
+#Rugved ke model ke liye...
+
+import cv2
+import os
+import time
+import tkinter as tk
+from PIL import Image, ImageTk
+
+# List of symbols
+symbols = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+           "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+           0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+# Create data folder if it doesn't exist
+data_folder = "data"
+if not os.path.exists(data_folder):
+    os.makedirs(data_folder)
+
+# Function to capture images for each symbol
+def capture_images(symbols):
+    for symbol in symbols:
+        symbol_folder = os.path.join(data_folder, str(symbol))
+        if not os.path.exists(symbol_folder):
+            os.makedirs(symbol_folder)
+        
+        print(f"Taking images for {symbol}")
+        
+        # Set up camera feed window
+        root = tk.Tk()
+        root.title(f"Capture images for {symbol}")
+        root.geometry("640x480")
+        label = tk.Label(root)
+        label.pack(padx=10, pady=10)
+
+        cap = cv2.VideoCapture(0)
+        
+        for i in range(60):
+            start_time = time.time()
+            
+            ret, frame = cap.read()
+            if not ret:
+                continue
+            
+            # Display camera feed
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame)
+            imgtk = ImageTk.PhotoImage(image=img)
+            label.imgtk = imgtk
+            label.configure(image=imgtk)
+            
+            # Save image
+            image_path = os.path.join(symbol_folder, f"{symbol}_{i}.jpg")
+            cv2.imwrite(image_path, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+            
+            # Calculate time to wait for the next image
+            elapsed_time = time.time() - start_time
+            time_to_wait = max(0, 1 - elapsed_time)
+            time.sleep(time_to_wait)
+            
+            root.update()  # Update the Tkinter window
+        
+        cap.release()
+        root.destroy()  # Close the Tkinter window
+        print(f"Finished capturing images for {symbol}")
+        time.sleep(5)  # Delay between capturing images for different symbols
+
+# Capture images for each symbol
+capture_images(symbols)
